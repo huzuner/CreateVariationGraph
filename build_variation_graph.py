@@ -15,11 +15,13 @@ def main():
     parser.add_argument('output_directory', type=str, help='Directory where the output should be saved')
     parser.add_argument('-g', '--gfa_file', dest='gfa_file', type=str, default=None, help="Location of the GFA file, if not provided a new graph is created")
     parser.add_argument('-vg', '--vg_directory', type=str, help="Location of the VG executable", default='vg')
+    parser.add_argument('-b', '--temp_dir', type=str, help="Temp directory for VG")
     args = parser.parse_args()
 
     # Set the VG executable path
     vg_path = args.vg_directory 
-
+    vg_temp_path = args.temp_dir
+    
     if not os.path.exists(args.output_directory):
         os.makedirs(args.output_directory)
     if args.gfa_file is None:
@@ -27,7 +29,7 @@ def main():
         graph = build_variation_graph(args.contigfile, all_to_all_alignment, args.output_directory, vg_path)
         simple_graph = simplify_graph(graph, args.output_directory, vg_path)
         gfa_file_final = convert_vg_to_gfa(simple_graph, vg_path)
-        read_mapping = map_reads_to_graph(simple_graph, args.forward_reads, args.reverse_reads, args.output_directory, vg_path)
+        read_mapping = map_reads_to_graph(simple_graph, args.forward_reads, args.reverse_reads, args.output_directory, vg_path, vg_temp_path)
     else:
         gfa_file = args.gfa_file
         read_mapping, gfa_file_final = map_reads_to_gfa_graph(gfa_file, args.forward_reads, args.reverse_reads, args.output_directory, vg_path)
@@ -165,13 +167,13 @@ def simplify_graph(graph_vg, output_directory, vg_path):
     return mod_graph  # Return the pruned graph file
 
 
-def map_reads_to_graph(graph_vg, forward_reads, reverse_reads, output_directory, vg_path):
+def map_reads_to_graph(graph_vg, forward_reads, reverse_reads, output_directory, vg_path, vg_temp_path):
     """Map reads to the variation graph using vg map."""
 
     # Index the graph (XG and GCSA indices required for mapping)
     xg_index = f'{output_directory}/mod_graph.xg'
     gcsa_index = f'{output_directory}/mod_graph.gcsa'
-    subprocess.run([vg_path, "index", graph_vg, "-x", xg_index, "-g", gcsa_index], check=True)
+    subprocess.run([vg_path, "index", graph_vg, "-x", xg_index, "-g", gcsa_index, "-b", vg_temp_path], check=True)
 
     # Map reads using vg map
     gam_output = f'{output_directory}/mapped_reads.gam'
