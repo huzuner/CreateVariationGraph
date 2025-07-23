@@ -148,7 +148,7 @@ def align_all_contigs(contigfile, output_directory):
 def build_variation_graph(fasta_file, paf_file, output_directory, vg_path):
     """Use seqwish to construct a variation graph from the PAF alignment."""
     output_gfa = f'{output_directory}/initial_seqwish.gfa'
-    cmd = ["seqwish", "-s", fasta_file, "-p", paf_file, "-g", output_gfa, "-k", "20", "-r",  "1", "-l", "1000"]
+    cmd = ["seqwish", "-s", fasta_file, "-p", paf_file, "-g", output_gfa, "-k", "20", "-r",  "20", "-l", "1000"]
     subprocess.run(cmd, check=True)
 
     # Convert GFA to VG format
